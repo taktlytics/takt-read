@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import HttpTransport from '../src/http/transport';
 import TaktError from '../src/errors';
 
@@ -109,5 +111,88 @@ describe('HttpTransport', () => {
     const p = t.request('GET', '/p', { signal: ac.signal });
     ac.abort();
     await expect(p).rejects.toThrow();
+  });
+});
+
+describe('HttpTransport redirects', () => {
+  interface Hit {
+    server: 'origin' | 'target';
+    path: string;
+    authorization?: string;
+  }
+
+  const hits: Hit[] = [];
+  let origin: Server;
+  let target: Server;
+  let originBase: string;
+  let targetBase: string;
+
+  function listen(handler: (req: IncomingMessage, res: ServerResponse) => void): Promise<Server> {
+    const server = createServer(handler);
+    return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
+  }
+
+  function portOf(server: Server): string {
+    return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  }
+
+  function recording(server: 'origin' | 'target', route: (req: IncomingMessage, res: ServerResponse) => void) {
+    return (req: IncomingMessage, res: ServerResponse) => {
+      hits.push({ server, path: req.url ?? '', authorization: req.headers.authorization });
+      route(req, res);
+    };
+  }
+
+  function sendJson(res: ServerResponse, status: number, location?: string) {
+    res.writeHead(status, location ? { location } : { 'content-type': 'application/json' });
+    res.end(location ? undefined : '{"ok":true}');
+  }
+
+  beforeAll(async () => {
+    target = await listen(recording('target', (_req, res) => sendJson(res, 200)));
+    targetBase = portOf(target);
+    origin = await listen(
+      recording('origin', (req, res) => {
+        const match = /^\/(cross|same)\/(\d{3})$/.exec(req.url ?? '');
+        if (!match) return sendJson(res, 200);
+        const [, kind, status] = match;
+        const location = kind === 'cross' ? `${targetBase}/landing` : `${originBase}/landing`;
+        sendJson(res, Number(status), location);
+      }),
+    );
+    originBase = portOf(origin);
+  });
+
+  afterAll(async () => {
+    await Promise.all([new Promise((r) => origin.close(r)), new Promise((r) => target.close(r))]);
+  });
+
+  function realTransport() {
+    return new HttpTransport({
+      baseUrl: originBase,
+      apiKey: 'sk_test',
+      fetch: globalThis.fetch,
+      timeoutMs: 2000,
+      retries: 0,
+    });
+  }
+
+  it.each([302, 307])('does not forward authorization on a %i cross-origin redirect', async (status) => {
+    hits.length = 0;
+    const out = await realTransport().request<{ ok: boolean }>('GET', `/cross/${status}`);
+    expect(out.ok).toBe(true);
+    const first = hits.find((h) => h.server === 'origin' && h.path === `/cross/${status}`);
+    const landed = hits.find((h) => h.server === 'target');
+    expect(first?.authorization).toBe('Bearer sk_test');
+    expect(landed?.path).toBe('/landing');
+    expect(landed?.authorization).toBeUndefined();
+  });
+
+  it.each([302, 307])('keeps authorization on a %i same-origin redirect', async (status) => {
+    hits.length = 0;
+    const out = await realTransport().request<{ ok: boolean }>('GET', `/same/${status}`);
+    expect(out.ok).toBe(true);
+    const landed = hits.find((h) => h.server === 'origin' && h.path === '/landing');
+    expect(landed?.authorization).toBe('Bearer sk_test');
   });
 });
