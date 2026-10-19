@@ -63,6 +63,22 @@ describe('TaktClient', () => {
     }
   });
 
+  it('refuses plain http outside the loopback interface', () => {
+    for (const baseUrl of ['http://example.com/api/v1', 'http://10.0.0.5/api/v1', 'http://takt.internal/api/v1']) {
+      expect(() => client({ baseUrl })).toThrowError(/réservé à la boucle locale/);
+    }
+  });
+
+  it('accepts plain http on the loopback interface', () => {
+    for (const baseUrl of ['http://localhost:8080/api/v1', 'http://127.0.0.1:8080/api/v1', 'http://[::1]:8080/api/v1']) {
+      expect(() => client({ baseUrl })).not.toThrow();
+    }
+  });
+
+  it('accepts https on any host', () => {
+    expect(() => client({ baseUrl: 'https://takt.example.com/api/v1' })).not.toThrow();
+  });
+
   it('drives a real call through the stats resource', async () => {
     const calls: string[] = [];
     const spy: typeof fetch = async (input) => {

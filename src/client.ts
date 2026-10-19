@@ -22,6 +22,7 @@ export interface TaktClientOptions {
 const DEFAULT_BASE_URL = 'https://taktlytics.com/api/v1';
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_RETRIES = 2;
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 
 export default class TaktClient {
   readonly stats: StatsResource;
@@ -40,6 +41,9 @@ export default class TaktClient {
     }
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       throw new TaktError(0, 'config_invalide', 'baseUrl doit utiliser le schéma http(s)');
+    }
+    if (parsed.protocol === 'http:' && !LOOPBACK_HOSTS.has(parsed.hostname)) {
+      throw new TaktError(0, 'config_invalide', 'baseUrl en http réservé à la boucle locale (localhost, 127.0.0.1, [::1]) ; utilisez https');
     }
 
     const fetchImpl = options.fetch ?? globalThis.fetch;

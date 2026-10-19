@@ -14,7 +14,7 @@ npm install @vskstudio/takt-read
 # or: pnpm add @vskstudio/takt-read
 ```
 
-Requires Node.js 18+ (uses the global `fetch`).
+Requires Node.js 20+ (uses the global `fetch`).
 
 ## Quick start
 
@@ -38,6 +38,7 @@ console.log(summary.visitors, summary.pageviews);
 `baseUrl` is optional: it defaults to the hosted Takt read API root (`https://taktlytics.com/api/v1`).
 It is the value resource paths (`/sites/:domain/stats/...`) are appended to, so a self-hosted
 `baseUrl` must include the `/api/v1` prefix, e.g. `https://your-takt-instance.example/api/v1`.
+Plain `http://` is accepted only on the loopback interface (`localhost`, `127.0.0.1`, `[::1]`); any other host must use `https://`, otherwise the constructor throws `config_invalide`.
 The constructor validates options and throws a `TaktError` (`code: 'config_invalide'`) on bad input.
 
 ## Stats methods
@@ -143,7 +144,7 @@ SDK TypeScript côté serveur pour l'API de lecture Takt. Interrogez vos statist
 npm install @vskstudio/takt-read
 ```
 
-Nécessite Node.js 18+ (utilise le `fetch` global).
+Nécessite Node.js 20+ (utilise le `fetch` global).
 
 ## Démarrage rapide
 
@@ -166,6 +167,7 @@ const resume = await takt.stats.summary({ period: '30d' });
 (`https://taktlytics.com/api/v1`). C'est la valeur à laquelle les chemins des ressources
 (`/sites/:domain/stats/...`) sont ajoutés, donc un `baseUrl` auto-hébergé doit inclure le préfixe
 `/api/v1`, ex. `https://votre-instance-takt.example/api/v1`.
+Le `http://` n'est accepté que sur la boucle locale (`localhost`, `127.0.0.1`, `[::1]`) ; tout autre hôte doit utiliser `https://`, sinon le constructeur lève `config_invalide`.
 Les méthodes vivent sous `takt.stats` et acceptent un `{ signal }` final pour l'annulation.
 
 ## Gestion des erreurs
