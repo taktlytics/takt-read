@@ -14,10 +14,10 @@
 
 - dd61176: Add the two remaining read endpoints so the SDK covers the full stats surface:
 
-  - `stats.breakdowns(dimensions, query?)` — several rankings in a single request
+  - `stats.breakdowns(dimensions, query?)`: several rankings in a single request
     (`GET /stats/breakdowns?dimensions=…`), returning a `StatsBreakdowns` map indexed by
     dimension. Throws `config_invalide` on an empty dimensions list (no request sent).
-  - `stats.export(query?)` — page ranking export on the org-scoped route
+  - `stats.export(query?)`: page ranking export on the org-scoped route
     (`GET /orgs/:org/sites/:domain/stats/export`). Default `format: 'csv'` returns the raw CSV
     string; `format: 'json'` returns typed `StatsExportRow[]`. Requires the new optional `org`
     client option; calling it without one throws `config_invalide`.
@@ -29,18 +29,18 @@
 
 ### Minor Changes
 
-- 13f168b: Initial release: server-only TypeScript SDK for the Takt read API. Class-based architecture — `TaktClient` with a `stats` resource (summary, timeseries, breakdown, realtime, goals, funnels, properties, property breakdown, batch breakdown, revenue), a hardened HTTP transport (configurable timeout, retry with backoff on 429/5xx, `AbortSignal` support, bearer auth), option validation, and `TaktError` for typed error handling. Zero runtime dependencies, ESM + CJS.
+- 13f168b: Initial release: server-only TypeScript SDK for the Takt read API. Class-based architecture: `TaktClient` with a `stats` resource (summary, timeseries, breakdown, realtime, goals, funnels, properties, property breakdown, batch breakdown, revenue), a hardened HTTP transport (configurable timeout, retry with backoff on 429/5xx, `AbortSignal` support, bearer auth), option validation, and `TaktError` for typed error handling. Zero runtime dependencies, ESM + CJS.
 
 ### Patch Changes
 
 - 4180c43: Fix the default `baseUrl` so the SDK works out of the box against the hosted API.
 
   The default pointed at the bare site origin (`https://taktlytics.com`), but resource paths are
-  `/sites/:domain/stats/...` with no `/api/v1` prefix — so an out-of-the-box
+  `/sites/:domain/stats/...` with no `/api/v1` prefix, so an out-of-the-box
   `new TaktClient({ apiKey, domain })` requested `https://taktlytics.com/sites/...`, which serves the
   marketing SPA and fails with `TaktError: Unexpected token '<' ... is not valid JSON`. The default is
   now the hosted read API root (`https://taktlytics.com/api/v1`), matching the `baseUrl` contract
-  (the value paths are appended to). Explicit `baseUrl` values are unaffected — they already had to
+  (the value paths are appended to). Explicit `baseUrl` values are unaffected, since they already had to
   include `/api/v1`.
 
 ## 0.2.0

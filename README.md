@@ -1,11 +1,11 @@
 # @vskstudio/takt-read
 
 
-> 📚 **Documentation** — [taktlytics.com/docs/reference/takt-read](https://taktlytics.com/docs/reference/takt-read)
+> 📚 **Documentation**: [taktlytics.com/docs/reference/takt-read](https://taktlytics.com/docs/reference/takt-read)
 
-Server-only TypeScript SDK for the Takt read API. Query your analytics — summary, timeseries, breakdowns, realtime, goals, funnels, custom properties and revenue — with a typed client.
+Server-only TypeScript SDK for the Takt read API. Query your analytics: summary, timeseries, breakdowns, realtime, goals, funnels, custom properties and revenue, with a typed client.
 
-> **Server-only.** Your read API key is a secret. Use this SDK on a server (API route, cron, backend service) — never ship it to a browser bundle.
+> **Server-only.** Your read API key is a secret. Use this SDK on a server (API route, cron, backend service). Never ship it to a browser bundle.
 
 ## Install
 
@@ -22,9 +22,9 @@ Requires Node.js 20+ (uses the global `fetch`).
 import TaktClient from '@vskstudio/takt-read';
 
 const takt = new TaktClient({
-  apiKey: process.env.TAKT_API_KEY!, // secret — keep it server-side
+  apiKey: process.env.TAKT_API_KEY!, // secret: keep it server-side
   domain: 'example.com',
-  org: 'my-org', // optional — only needed for stats.export() (org-scoped route)
+  org: 'my-org', // optional, only needed for stats.export() (org-scoped route)
   // baseUrl defaults to the hosted Takt read API root (https://taktlytics.com/api/v1).
   // Set it to target a self-hosted instance, e.g. 'https://your-takt-instance.example/api/v1'.
   timeoutMs: 30_000, // optional, default 30s
@@ -59,7 +59,7 @@ All read endpoints live under `takt.stats`. Each method takes an optional final
 | `stats.propertyBreakdown(event, key, query?)` | `PropertyBreakdown` |
 | `stats.propertyBreakdownBatch(request, query?)` | `PropertyBatchResponse` |
 | `stats.revenue(event, query?)` | `RevenueByCurrency` |
-| `stats.export(query?)` | `string` (CSV) or `StatsExportRow[]` (JSON) — requires `org` |
+| `stats.export(query?)` | `string` (CSV) or `StatsExportRow[]` (JSON), and it requires `org` |
 
 ```ts
 // Several rankings in one request:
@@ -68,7 +68,7 @@ const { breakdowns } = await takt.stats.breakdowns(['pages', 'sources', 'countri
 });
 console.log(breakdowns.pages.rows, breakdowns.sources.rows);
 
-// Exact figures for one specific URL — segment on the raw pathname:
+// Exact figures for one specific URL. Segment on the raw pathname:
 const page = await takt.stats.summary({
   period: '30d',
   segment: [{ dim: 'pages', op: 'is', val: '/servers/1025426969745182741' }],
@@ -105,7 +105,7 @@ await takt.stats.timeseries({
 
 Use `from`/`to` (ISO dates) instead of `period` for a custom window.
 
-`dimension` (breakdown), `segment[].dim` and `segment[].op` are typed unions (`StatsDimension` / `SegmentOperator`), so your editor autocompletes them and the compiler rejects invalid names. Dimensions: `pages`, `sources`, `countries`, `regions`, `cities`, `os`, `browsers`, `devices`, `utm_source`, `utm_medium`, `utm_campaign` (note the plural — the singular `page`/`source` forms are not valid). Segment operators: `is`, `not`.
+`dimension` (breakdown), `segment[].dim` and `segment[].op` are typed unions (`StatsDimension` / `SegmentOperator`), so your editor autocompletes them and the compiler rejects invalid names. Dimensions: `pages`, `sources`, `countries`, `regions`, `cities`, `os`, `browsers`, `devices`, `utm_source`, `utm_medium`, `utm_campaign` (note the plural: the singular `page`/`source` forms are not valid). Segment operators: `is`, `not`.
 
 ## Error handling
 
@@ -128,15 +128,15 @@ try {
 
 ## License
 
-UNLICENSED — proprietary. © vskstudio.
+UNLICENSED: proprietary. © vskstudio.
 
 ---
 
 # @vskstudio/takt-read (Français)
 
-SDK TypeScript côté serveur pour l'API de lecture Takt. Interrogez vos statistiques — résumé, séries temporelles, répartitions, temps réel, objectifs, tunnels, propriétés personnalisées et revenus — avec un client typé.
+SDK TypeScript côté serveur pour l'API de lecture Takt. Interrogez vos statistiques (résumé, séries temporelles, répartitions, temps réel, objectifs, tunnels, propriétés personnalisées et revenus) avec un client typé.
 
-> **Côté serveur uniquement.** Votre clé d'API de lecture est secrète. Utilisez ce SDK sur un serveur (route API, cron, service backend) — ne l'embarquez jamais dans un bundle navigateur.
+> **Côté serveur uniquement.** Votre clé d'API de lecture est secrète. Utilisez ce SDK sur un serveur (route API, cron, service backend). Ne l'embarquez jamais dans un bundle navigateur.
 
 ## Installation
 
@@ -152,7 +152,7 @@ Nécessite Node.js 20+ (utilise le `fetch` global).
 import TaktClient from '@vskstudio/takt-read';
 
 const takt = new TaktClient({
-  apiKey: process.env.TAKT_API_KEY!, // secret — à garder côté serveur
+  apiKey: process.env.TAKT_API_KEY!, // secret, à garder côté serveur
   domain: 'example.com',
   // baseUrl pointe par défaut vers la racine de l'API read Takt hébergée (https://taktlytics.com/api/v1).
   // Renseignez-le pour cibler une instance auto-hébergée, ex. 'https://votre-instance-takt.example/api/v1'.
@@ -176,4 +176,4 @@ Les réponses non-2xx lèvent une `TaktError` portant le statut HTTP et le code 
 
 ## Licence
 
-UNLICENSED — propriétaire. © vskstudio.
+UNLICENSED, propriétaire. © vskstudio.
