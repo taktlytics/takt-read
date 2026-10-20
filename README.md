@@ -26,7 +26,7 @@ const takt = new TaktClient({
   domain: 'example.com',
   org: 'my-org', // optional, only needed for stats.export() (org-scoped route)
   // baseUrl defaults to the hosted Takt read API root (https://taktlytics.com/api/v1).
-  // Set it to target a self-hosted instance, e.g. 'https://your-takt-instance.example/api/v1'.
+  // Set it to target another host (a first-party proxy, a test environment), e.g. 'https://proxy.example.com/api/v1'.
   timeoutMs: 30_000, // optional, default 30s
   retries: 2, // optional, default 2 (retries 429 + 5xx with backoff)
 });
@@ -36,8 +36,8 @@ console.log(summary.visitors, summary.pageviews);
 ```
 
 `baseUrl` is optional: it defaults to the hosted Takt read API root (`https://taktlytics.com/api/v1`).
-It is the value resource paths (`/sites/:domain/stats/...`) are appended to, so a self-hosted
-`baseUrl` must include the `/api/v1` prefix, e.g. `https://your-takt-instance.example/api/v1`.
+It is the value resource paths (`/sites/:domain/stats/...`) are appended to, so a custom `baseUrl`
+(a first-party proxy, for instance) must include the `/api/v1` prefix, e.g. `https://proxy.example.com/api/v1`.
 Plain `http://` is accepted only on the loopback interface (`localhost`, `127.0.0.1`, `[::1]`); any other host must use `https://`, otherwise the constructor throws `config_invalide`.
 The constructor validates options and throws a `TaktError` (`code: 'config_invalide'`) on bad input.
 
@@ -155,7 +155,7 @@ const takt = new TaktClient({
   apiKey: process.env.TAKT_API_KEY!, // secret, à garder côté serveur
   domain: 'example.com',
   // baseUrl pointe par défaut vers la racine de l'API read Takt hébergée (https://taktlytics.com/api/v1).
-  // Renseignez-le pour cibler une instance auto-hébergée, ex. 'https://votre-instance-takt.example/api/v1'.
+  // Renseignez-le pour cibler un autre hôte (proxy first-party, environnement de test), ex. 'https://proxy.example.com/api/v1'.
   timeoutMs: 30_000, // optionnel, 30s par défaut
   retries: 2, // optionnel, 2 par défaut (réessaie 429 + 5xx avec backoff)
 });
@@ -165,8 +165,8 @@ const resume = await takt.stats.summary({ period: '30d' });
 
 `baseUrl` est optionnel : il pointe par défaut vers la racine de l'API read Takt hébergée
 (`https://taktlytics.com/api/v1`). C'est la valeur à laquelle les chemins des ressources
-(`/sites/:domain/stats/...`) sont ajoutés, donc un `baseUrl` auto-hébergé doit inclure le préfixe
-`/api/v1`, ex. `https://votre-instance-takt.example/api/v1`.
+(`/sites/:domain/stats/...`) sont ajoutés, donc un `baseUrl` personnalisé (proxy first-party, par exemple) doit inclure le préfixe
+`/api/v1`, ex. `https://proxy.example.com/api/v1`.
 Le `http://` n'est accepté que sur la boucle locale (`localhost`, `127.0.0.1`, `[::1]`) ; tout autre hôte doit utiliser `https://`, sinon le constructeur lève `config_invalide`.
 Les méthodes vivent sous `takt.stats` et acceptent un `{ signal }` final pour l'annulation.
 
