@@ -37,7 +37,7 @@ describe('TaktClient', () => {
     };
     const takt = new TaktClient({ apiKey: 'sk', domain: 'example.com', fetch: spy });
     await takt.stats.summary();
-    // the default base must include the /api/v1 prefix — otherwise the request hits the marketing
+    // the default base must include the /api/v1 prefix, otherwise the request hits the marketing
     // SPA and comes back as HTML, not JSON
     expect(calls[0]).toBe('https://taktlytics.com/api/v1/sites/example.com/stats/summary');
   });

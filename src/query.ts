@@ -1,7 +1,7 @@
 export type Period = 'day' | '7d' | '30d' | 'month' | '6mo' | '12mo';
 export type Interval = 'hour' | 'day' | 'week' | 'month';
 
-// Dimensions standard des stats — mêmes valeurs pour le classement (breakdown) et
+// Dimensions standard des stats, mêmes valeurs pour le classement (breakdown) et
 // le filtrage (segment). Les singuliers comme "page"/"source" ne sont pas valides.
 export type StatsDimension =
   | 'pages'
