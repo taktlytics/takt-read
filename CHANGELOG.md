@@ -4,7 +4,7 @@
 
 ### Minor Changes
 
-- d2ad85b: Breaking: `baseUrl` over plain `http://` is now refused unless the host is loopback (`localhost`, `127.0.0.1`, `[::1]`). Self-hosted instances must be served over `https://`. Node 18 is no longer supported: the minimum Node.js version is now 20.
+- d2ad85b: Breaking: `baseUrl` over plain `http://` is now refused unless the host is loopback (`localhost`, `127.0.0.1`, `[::1]`). Custom `baseUrl` targets must be served over `https://`. Node 18 is no longer supported: the minimum Node.js version is now 20.
 
   The HTTP transport's cross-origin redirect behavior (the `Authorization` header is dropped when a redirect leaves the origin) is now covered by tests.
 
@@ -49,8 +49,8 @@
 
 - `baseUrl` is now optional and defaults to the hosted Takt origin
   (`https://taktlytics.com`), so `TaktClient` works out of the box and stays
-  consistent with the other Takt SDKs. Pass `baseUrl` to target a self-hosted
-  instance; when provided it is still validated (http(s) scheme) and normalised
+  consistent with the other Takt SDKs. Pass `baseUrl` to target another host, such as a
+  first-party proxy; when provided it is still validated (http(s) scheme) and normalised
   (trailing slash stripped) exactly as before.
 
 ### Hardening

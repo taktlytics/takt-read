@@ -10,8 +10,9 @@ export interface TaktClientOptions {
    * Root of the Takt read API: the value the resource paths (`/sites/:domain/stats/...`) are
    * appended to, so it must include the API prefix. Optional: defaults to the hosted Takt read
    * API root (`https://taktlytics.com/api/v1`) so the SDK works out of the box. Provide it to
-   * target a self-hosted instance (e.g. `https://takt.example.com/api/v1`). When provided it must
-   * be a valid http(s) URL; any trailing slash is stripped.
+   * target another host, such as a first-party proxy or a test environment (e.g.
+   * `https://proxy.example.com/api/v1`). When provided it must be a valid http(s) URL; any
+   * trailing slash is stripped.
    */
   baseUrl?: string;
   fetch?: typeof fetch;
