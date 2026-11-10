@@ -60,6 +60,7 @@ All read endpoints live under `takt.stats`. Each method takes an optional final
 | `stats.propertyBreakdownBatch(request, query?)` | `PropertyBatchResponse` |
 | `stats.revenue(event, query?)` | `RevenueByCurrency` |
 | `stats.export(query?)` | `string` (CSV) or `StatsExportRow[]` (JSON), and it requires `org` |
+| `stats.exportResult(query?)` | `StatsExportResult<string>` (CSV) or `StatsExportResult<StatsExportRow[]>` (JSON), and it requires `org` |
 
 ```ts
 // Several rankings in one request:
@@ -79,6 +80,20 @@ console.log(page.visitors, page.pageviews);
 const csv = await takt.stats.export({ period: '30d' }); // raw CSV string
 const rows = await takt.stats.export({ period: '30d', format: 'json' }); // StatsExportRow[]
 ```
+
+The export is capped server-side at 999 rows and 256 KB. When the cap cuts rows off, the API sets
+`X-Takt-Truncated: true` and the body stays a plain CSV string or JSON array. `stats.export()` returns
+that body as is, so use `stats.exportResult()` when you need to know whether rows are missing:
+
+```ts
+const { data, truncated } = await takt.stats.exportResult({ period: '30d', format: 'json' });
+if (truncated) {
+  // data holds the first rows only: narrow the period or segment to get the rest
+}
+```
+
+`truncated` is `false` when the header is `false` or absent. `data` has the same type as the
+`stats.export()` result for the same `format`.
 
 ```ts
 const ac = new AbortController();
@@ -169,6 +184,22 @@ const resume = await takt.stats.summary({ period: '30d' });
 `/api/v1`, ex. `https://proxy.example.com/api/v1`.
 Le `http://` n'est accepté que sur la boucle locale (`localhost`, `127.0.0.1`, `[::1]`) ; tout autre hôte doit utiliser `https://`, sinon le constructeur lève `config_invalide`.
 Les méthodes vivent sous `takt.stats` et acceptent un `{ signal }` final pour l'annulation.
+
+## Export tronqué
+
+L'export (`stats.export()`, qui requiert `org`) est borné côté serveur à 999 lignes et 256 Ko. Quand
+la borne coupe des lignes, l'API pose l'en-tête `X-Takt-Truncated: true` et le corps reste une chaîne
+CSV ou un tableau JSON. `stats.export()` renvoie ce corps tel quel ; `stats.exportResult()` renvoie
+`{ data, truncated }` pour savoir s'il manque des lignes :
+
+```ts
+const { data, truncated } = await takt.stats.exportResult({ period: '30d', format: 'json' });
+if (truncated) {
+  // data ne contient que les premières lignes : resserrez la période ou le segment
+}
+```
+
+`truncated` vaut `false` si l'en-tête vaut `false` ou est absent.
 
 ## Gestion des erreurs
 
