@@ -51,6 +51,28 @@ describe('HttpTransport', () => {
     expect(headers.accept).toBe('application/json');
   });
 
+  it('exposes the response headers alongside the body', async () => {
+    const stub = sequencedFetch([
+      () =>
+        new Response('{"ok":true}', {
+          status: 200,
+          headers: { 'content-type': 'application/json', 'x-takt-truncated': 'true' },
+        }),
+    ]);
+    const out = await transport(stub.fn).requestWithHeaders<{ ok: boolean }>('GET', '/p');
+    expect(out.body).toEqual({ ok: true });
+    expect(out.headers.get('x-takt-truncated')).toBe('true');
+  });
+
+  it('exposes the headers of a raw text response', async () => {
+    const stub = sequencedFetch([
+      () => new Response('a,b\n', { status: 200, headers: { 'x-takt-truncated': 'false' } }),
+    ]);
+    const out = await transport(stub.fn).requestWithHeaders<string>('GET', '/p', { raw: true });
+    expect(out.body).toBe('a,b\n');
+    expect(out.headers.get('x-takt-truncated')).toBe('false');
+  });
+
   it('serializes a JSON body and sets content-type', async () => {
     const stub = sequencedFetch([() => json(200, {})]);
     const t = transport(stub.fn);
