@@ -20,6 +20,7 @@ export type {
   StatsBreakdownRow,
   StatsBreakdowns,
   StatsExportRow,
+  StatsExportResult,
   StatsRealtime,
   StatsGoals,
   GoalConversion,

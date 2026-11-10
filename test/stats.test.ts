@@ -2,16 +2,22 @@ import { describe, it, expect } from 'vitest';
 import HttpTransport from '../src/http/transport';
 import StatsResource from '../src/resources/stats';
 
-function recorder(body: unknown = {}, opts: { org?: string; text?: string } = {}) {
+function recorder(
+  body: unknown = {},
+  opts: { org?: string; text?: string; headers?: Record<string, string> } = {},
+) {
   const calls: { url: string; init: RequestInit }[] = [];
   const fn: typeof fetch = async (input, init) => {
     calls.push({ url: String(input), init: init ?? {} });
     if (opts.text !== undefined) {
-      return new Response(opts.text, { status: 200, headers: { 'content-type': 'text/csv' } });
+      return new Response(opts.text, {
+        status: 200,
+        headers: { 'content-type': 'text/csv', ...opts.headers },
+      });
     }
     return new Response(JSON.stringify(body), {
       status: 200,
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', ...opts.headers },
     });
   };
   const transport = new HttpTransport({
@@ -126,6 +132,44 @@ describe('StatsResource', () => {
     const out = await r.stats.export({ format: 'json' });
     expect(out).toEqual(rows);
     expect(urlOf(r.calls[0]!).searchParams.get('format')).toBe('json');
+  });
+
+  it('keeps export returning the bare body when the server truncates', async () => {
+    const rows = [{ label: '/', visitors: 3, pageviews: 5 }];
+    const r = recorder(rows, { org: 'acme', headers: { 'x-takt-truncated': 'true' } });
+    expect(await r.stats.export({ format: 'json' })).toEqual(rows);
+  });
+
+  it('flags a truncated JSON export from the X-Takt-Truncated header', async () => {
+    const rows = [{ label: '/', visitors: 3, pageviews: 5 }];
+    const r = recorder(rows, { org: 'acme', headers: { 'X-Takt-Truncated': 'true' } });
+    const out = await r.stats.exportResult({ format: 'json' });
+    expect(out).toEqual({ data: rows, truncated: true });
+    expect(urlOf(r.calls[0]!).searchParams.get('format')).toBe('json');
+  });
+
+  it('flags a truncated CSV export from the X-Takt-Truncated header', async () => {
+    const csv = 'label,visitors,pageviews\n/,3,5\n';
+    const r = recorder({}, { org: 'acme', text: csv, headers: { 'X-Takt-Truncated': 'true' } });
+    const out = await r.stats.exportResult({ period: '30d' });
+    expect(out).toEqual({ data: csv, truncated: true });
+    expect((r.calls[0]!.init.headers as Record<string, string>).accept).toBe('text/csv');
+  });
+
+  it('reports a complete export when the header says false', async () => {
+    const r = recorder([], { org: 'acme', headers: { 'X-Takt-Truncated': 'false' } });
+    expect(await r.stats.exportResult({ format: 'json' })).toEqual({ data: [], truncated: false });
+  });
+
+  it('reports a complete export when the header is absent', async () => {
+    const r = recorder({}, { org: 'acme', text: '' });
+    expect(await r.stats.exportResult()).toEqual({ data: '', truncated: false });
+  });
+
+  it('requires org for exportResult', async () => {
+    const r = recorder();
+    await expect(r.stats.exportResult()).rejects.toMatchObject({ code: 'config_invalide' });
+    expect(r.calls).toHaveLength(0);
   });
 
   it('requires org for export', async () => {
