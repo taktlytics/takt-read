@@ -18,6 +18,11 @@ export interface RequestOptions {
   raw?: boolean;
 }
 
+export interface HttpResponse<T> {
+  body: T;
+  headers: Headers;
+}
+
 const MAX_BACKOFF_MS = 2000;
 
 export default class HttpTransport {
@@ -36,6 +41,14 @@ export default class HttpTransport {
   }
 
   async request<T>(method: HttpMethod, path: string, options: RequestOptions = {}): Promise<T> {
+    return (await this.requestWithHeaders<T>(method, path, options)).body;
+  }
+
+  async requestWithHeaders<T>(
+    method: HttpMethod,
+    path: string,
+    options: RequestOptions = {},
+  ): Promise<HttpResponse<T>> {
     const url = this.#url(path, options.query);
     const headers: Record<string, string> = {
       authorization: `Bearer ${this.#apiKey}`,
@@ -60,7 +73,10 @@ export default class HttpTransport {
 
       try {
         const res = await this.#fetch(url, { method, headers, body, signal: controller.signal });
-        if (res.ok) return (options.raw ? await res.text() : await res.json()) as T;
+        if (res.ok) {
+          const body = (options.raw ? await res.text() : await res.json()) as T;
+          return { body, headers: res.headers };
+        }
         if (attempt < this.#retries && this.#retryable(res.status)) {
           await this.#sleep(this.#delay(attempt, res));
           continue;

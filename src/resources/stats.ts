@@ -8,6 +8,7 @@ import type {
   StatsBreakdown,
   StatsBreakdowns,
   StatsExportRow,
+  StatsExportResult,
   StatsRealtime,
   StatsGoals,
   FunnelReports,
@@ -100,14 +101,34 @@ export default class StatsResource {
 
   export(query?: StatsQuery & { format?: 'csv' }, options?: CallOptions): Promise<string>;
   export(query: StatsQuery & { format: 'json' }, options?: CallOptions): Promise<StatsExportRow[]>;
-  export(
+  async export(
     query: StatsQuery & { format?: 'csv' | 'json' } = {},
     options?: CallOptions,
   ): Promise<string | StatsExportRow[]> {
+    return (await this.#export(query, options)).data;
+  }
+
+  exportResult(
+    query?: StatsQuery & { format?: 'csv' },
+    options?: CallOptions,
+  ): Promise<StatsExportResult<string>>;
+  exportResult(
+    query: StatsQuery & { format: 'json' },
+    options?: CallOptions,
+  ): Promise<StatsExportResult<StatsExportRow[]>>;
+  exportResult(
+    query: StatsQuery & { format?: 'csv' | 'json' } = {},
+    options?: CallOptions,
+  ): Promise<StatsExportResult<string | StatsExportRow[]>> {
+    return this.#export(query, options);
+  }
+
+  async #export(
+    query: StatsQuery & { format?: 'csv' | 'json' },
+    options?: CallOptions,
+  ): Promise<StatsExportResult<string | StatsExportRow[]>> {
     if (!this.#org) {
-      return Promise.reject(
-        new TaktError(0, 'config_invalide', 'org requis pour export : fournissez options.org au client'),
-      );
+      throw new TaktError(0, 'config_invalide', 'org requis pour export : fournissez options.org au client');
     }
     const { format = 'csv', ...rest } = query;
     const params = StatsResource.#params(rest);
@@ -119,7 +140,8 @@ export default class StatsResource {
       init.accept = 'text/csv';
       init.raw = true;
     }
-    return this.#http.request('GET', path, init);
+    const res = await this.#http.requestWithHeaders<string | StatsExportRow[]>('GET', path, init);
+    return { data: res.body, truncated: res.headers.get('x-takt-truncated') === 'true' };
   }
 
   #get<T>(

@@ -53,6 +53,11 @@ export interface StatsExportRow {
   pageviews: number;
 }
 
+export interface StatsExportResult<T> {
+  data: T;
+  truncated: boolean;
+}
+
 export interface StatsRealtime {
   visitors: number;
 }
